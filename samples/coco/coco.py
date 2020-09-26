@@ -104,11 +104,20 @@ class CocoDataset(utils.Dataset):
         return_coco: If True, returns the COCO object.
         auto_download: Automatically download and unzip MS-COCO images and annotations
         """
-
+        """
+        读取COCO数据集的子集.
+        dataset_dir: COCO数据集根目录.
+        subset: 读取哪一个 (train, val, minival, valminusminival)
+        year: 作为字符串读取哪一年的数据集 (2014, 2017) 而不是作为整型
+        class_ids: 如果提供了, 只读取给定分类id的图片.
+        class_map: TODO:尚未实现。支持将不同数据集的类映射到同一个类ID。
+        return_coco: 如果为真, 返回COCO对象.
+        auto_download: 自动下载和解压 MS-COCO 图片和标注
+        """
         if auto_download is True:
-            self.auto_download(dataset_dir, subset, year)
+            self.auto_download(dataset_dir, subset, year)#函数定义在下方
 
-        coco = COCO("{}/annotations/instances_{}{}.json".format(dataset_dir, subset, year))
+        coco = COCO("{}/annotations/instances_{}{}.json".format(dataset_dir, subset, year))# ???
         if subset == "minival" or subset == "valminusminival":
             subset = "val"
         image_dir = "{}/{}{}".format(dataset_dir, subset, year)
@@ -131,7 +140,7 @@ class CocoDataset(utils.Dataset):
 
         # Add classes
         for i in class_ids:
-            self.add_class("coco", i, coco.loadCats(i)[0]["name"])
+            self.add_class("coco", i, coco.loadCats(i)[0]["name"])  # ???
 
         # Add images
         for i in image_ids:
@@ -175,7 +184,7 @@ class CocoDataset(utils.Dataset):
             os.makedirs(imgDir)
             print("Downloading images to " + imgZipFile + " ...")
             with urllib.request.urlopen(imgURL) as resp, open(imgZipFile, 'wb') as out:
-                shutil.copyfileobj(resp, out)
+                shutil.copyfileobj(resp, out) # ???
             print("... done downloading.")
             print("Unzipping " + imgZipFile)
             with zipfile.ZipFile(imgZipFile, "r") as zip_ref:
@@ -229,6 +238,15 @@ class CocoDataset(utils.Dataset):
             one mask per instance.
         class_ids: a 1D array of class IDs of the instance masks.
         """
+        """
+        加载给定图像的instance masks.
+        不同的数据集使用不同的方式存储masks。本函数将不同格式的mask转化
+        成同一格式的bitmap，维度是[height, width, instances].
+        返回:
+        masks:一个bool数组，尺寸是[height, width, instance count]，
+            一个instance有一个mask.
+        class_ids:一个一维数组，元素是instance masks的class IDs。
+        """
         # If not a COCO image, delegate to parent class.
         image_info = self.image_info[image_id]
         if image_info["source"] != "coco":
@@ -243,7 +261,7 @@ class CocoDataset(utils.Dataset):
             class_id = self.map_source_class_id(
                 "coco.{}".format(annotation['category_id']))
             if class_id:
-                m = self.annToMask(annotation, image_info["height"],
+                m = self.annToMask(annotation, image_info["height"],#函数定义在下方
                                    image_info["width"])
                 # Some objects are so small that they're less than 1 pixel area
                 # and end up rounded out. Skip those objects.
@@ -252,7 +270,7 @@ class CocoDataset(utils.Dataset):
                 # Is it a crowd? If so, use a negative class ID.
                 if annotation['iscrowd']:
                     # Use negative class ID for crowds
-                    class_id *= -1
+                    class_id *= -1   # ???
                     # For crowd masks, annToMask() sometimes returns a mask
                     # smaller than the given dimensions. If so, resize it.
                     if m.shape[0] != image_info["height"] or m.shape[1] != image_info["width"]:
@@ -353,7 +371,7 @@ def evaluate_coco(model, dataset, coco, eval_type="bbox", limit=0, image_ids=Non
         image_ids = image_ids[:limit]
 
     # Get corresponding COCO image IDs.
-    coco_image_ids = [dataset.image_info[id]["id"] for id in image_ids]
+    coco_image_ids = [dataset.image_info[id]["id"] for id in image_ids] #  ???
 
     t_prediction = 0
     t_start = time.time()
